@@ -19,6 +19,10 @@ function s:UseDir(name, perm)
   elseif !exists('*mkdir') || !mkdir(a:name, 'p', a:perm)
     return 0
   endif
+  if has('unix')
+    " workaround for sudo
+    call system('chown `logname` ' . shellescape(a:name))
+  endif
   return 1
 endfunction
 
