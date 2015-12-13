@@ -38,17 +38,17 @@ if !s:UseDir(s:bdir, 0700)
 endif
 
 " define handler
-let s:original_bex = &backupext
 function s:BackupHandler()
-  let &backupext = s:original_bex
-  if !exists('b:ddbackup_done')
-    let &backupext = strftime('-%Y%m%dT%H%M%S.bak')
-    let b:ddbackup_done = 1
-  endif
-
   " use per-directory backupdir if possible
   let l:bdir = s:bdir . '/' . expand('%:p:h:gs?[/\\]?%?')
   let &backupdir = s:UseDir(l:bdir, 0700) ? l:bdir : s:bdir
+
+  " keep original and minutely backups
+  let &backupext = strftime('-%Y%m%dT%H%M~')
+  if !exists('b:ddbackup_original_saved')
+    let &backupext = strftime('-%Y%m%dT%H%M%S~')
+    let b:ddbackup_original_saved = 1
+  endif
 endfunction
 
 " register handler
