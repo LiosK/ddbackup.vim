@@ -1,7 +1,7 @@
 " Dated Backup Plugin
 " =========================================================================
 " Author:     LiosK <contact@mail.liosk.net>
-" Version:    v1.0.4
+" Version:    v2.0.0
 " Licence:    The MIT Licence
 " Copyright:  Copyright (c) 2009-2015 LiosK.
 " =========================================================================
@@ -38,17 +38,16 @@ if !s:UseDir(s:bdir, 0700)
 endif
 
 " define handler
-let s:original_bex = &backupext
 function s:BackupHandler()
-  if exists('b:ddbackup_bex')
-    let &backupext = s:original_bex
-  else
-    let b:ddbackup_bex = strftime('-%Y%m%dT%H%M%S.bak')
-    let &backupext     = b:ddbackup_bex
+  " use per-directory backupdir if possible
+  let l:bdir = s:bdir . '/' . expand('%:p:h:gs?[/\\]?%?')
+  let &backupdir = s:UseDir(l:bdir, 0700) ? l:bdir : s:bdir
 
-    " use monthly backupdir if possible
-    let l:bdir = s:bdir . strftime('/%Y%m')
-    let &backupdir = s:UseDir(l:bdir, 0700) ? l:bdir : s:bdir
+  " keep original and minutely backups
+  let &backupext = strftime('-%Y%m%dT%H%M~')
+  if !exists('b:ddbackup_original_saved')
+    let &backupext = strftime('-%Y%m%dT%H%M%S~')
+    let b:ddbackup_original_saved = 1
   endif
 endfunction
 
