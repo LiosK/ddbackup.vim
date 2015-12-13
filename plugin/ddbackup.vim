@@ -1,7 +1,7 @@
 " Dated Backup Plugin
 " =========================================================================
 " Author:     LiosK <contact@mail.liosk.net>
-" Version:    v1.0.3 (20151212)
+" Version:    v1.0.4
 " Licence:    The MIT Licence
 " Copyright:  Copyright (c) 2009-2015 LiosK.
 " =========================================================================
@@ -12,13 +12,27 @@ if !&backup || exists('loaded_ddbackup')
 endif
 let loaded_ddbackup = 1
 
+" create directory if not exists
+function s:UseDir(name, perm)
+  if isdirectory(a:name)
+    return 1
+  elseif !exists('*mkdir') || !mkdir(a:name, 'p', a:perm)
+    return 0
+  endif
+  if has('unix')
+    " workaround for sudo
+    call system('chown `logname` ' . shellescape(a:name))
+  endif
+  return 1
+endfunction
+
 " prepare root backupdir
 let s:bdir = '~/.vim_backup'
 if &backupdir != ''
   let s:pos  = stridx(&backupdir, ',')
   let s:bdir = (s:pos < 0) ? &backupdir : strpart(&backupdir, 0, s:pos)
 endif
-if !isdirectory(s:bdir) && !(exists('*mkdir') && mkdir(s:bdir, 'p', 0700))
+if !s:UseDir(s:bdir, 0700)
   echoerr 'ddbackup.vim: error: cannot make the backup directory'
   finish  " do nothing when the root backupdir is not available
 endif
@@ -34,11 +48,7 @@ function s:BackupHandler()
 
     " use monthly backupdir if possible
     let l:bdir = s:bdir . strftime('/%Y%m')
-    if isdirectory(l:bdir) || (exists('*mkdir') && mkdir(l:bdir, 'p'))
-      let &backupdir = l:bdir
-    else
-      let &backupdir = s:bdir
-    endif
+    let &backupdir = s:UseDir(l:bdir, 0700) ? l:bdir : s:bdir
   endif
 endfunction
 
